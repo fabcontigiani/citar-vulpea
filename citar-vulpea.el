@@ -101,8 +101,25 @@ When a string, notes are stored in that subdirectory."
 
 (defun citar-vulpea--note-property (note property)
   "Get value of PROPERTY from NOTE.
-Lookup PROPERTY in the properties alist of NOTE."
-  (cdr (assoc property (vulpea-note-properties note))))
+Lookup PROPERTY in the properties alist of NOTE, handling both
+string and symbol keys, and case-insensitivity."
+  (cdr (assoc-string property (vulpea-note-properties note) t)))
+
+(defun citar-vulpea--get-ref-property ()
+  "Get the reference property for the note at point.
+Ensures we look at the correct entry (heading or file-level)."
+  (save-excursion
+    (org-back-to-heading-or-point-min t)
+    (org-entry-get nil citar-vulpea-refs-property)))
+
+(defun citar-vulpea--set-ref-property (value)
+  "Set the reference property for the note at point to VALUE.
+Ensures we update the correct entry (heading or file-level)."
+  (save-excursion
+    (org-back-to-heading-or-point-min t)
+    (if (and value (> (length value) 0))
+        (org-entry-put nil citar-vulpea-refs-property value)
+      (org-entry-delete nil citar-vulpea-refs-property))))
 
 (defun citar-vulpea--parse-refs (refs-string)
   "Parse REFS-STRING into a list of citation keys.
@@ -127,11 +144,14 @@ REFS-STRING contains @-prefixed keys separated by spaces."
               (seq-contains-p (vulpea-note-tags note) citar-vulpea-keyword)))))))
 
 (defun citar-vulpea--get-all-bib-notes ()
-  "Get all vulpea notes tagged with `citar-vulpea-keyword'."
+  "Get all vulpea notes tagged with `citar-vulpea-keyword'.
+If `citar-vulpea-keyword' is nil or an empty string, return all
+notes with the reference property."
   (vulpea-db-query
    (lambda (note)
      (and (citar-vulpea--note-property note citar-vulpea-refs-property)
-          (seq-contains-p (vulpea-note-tags note) citar-vulpea-keyword)))))
+          (or (not (and citar-vulpea-keyword (> (length citar-vulpea-keyword) 0)))
+              (seq-contains-p (vulpea-note-tags note) citar-vulpea-keyword))))))
 
 (defun citar-vulpea--get-notes (&optional keys)
   "Return hash table mapping citation KEYS to lists of vulpea notes.
@@ -220,23 +240,21 @@ Prompts to select from bibliography entries that have citations in notes."
 ;;;###autoload
 (defun citar-vulpea-add-reference ()
   "Add a citation reference to the current note.
-Prompts to select a bibliography entry and adds it to the ROAM_REFS property."
+Prompts to select a bibliography entry and adds it to the reference property."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Not in an org-mode buffer"))
-  (let* ((current-refs (org-entry-get nil citar-vulpea-refs-property))
+  (let* ((current-refs (citar-vulpea--get-ref-property))
          (current-keys (citar-vulpea--parse-refs current-refs))
          (citekey (citar-select-ref
                    :filter (lambda (key) (not (member key current-keys)))))
          (new-ref (concat "@" citekey))
-         (new-refs (if current-refs
+         (new-refs (if (and current-refs (> (length current-refs) 0))
                        (concat current-refs " " new-ref)
                      new-ref)))
-    (org-entry-put nil citar-vulpea-refs-property new-refs)
+    (citar-vulpea--set-ref-property new-refs)
     ;; Ensure the bib tag is present
-    (let ((tags (org-get-tags nil t)))
-      (unless (member citar-vulpea-keyword tags)
-        (org-set-tags (cons citar-vulpea-keyword tags))))
+    (vulpea-buffer-tags-add (list citar-vulpea-keyword))
     (message "Added reference: %s" citekey)))
 
 ;;;###autoload
@@ -246,7 +264,7 @@ If only one reference remains, also removes the bibliography tag."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Not in an org-mode buffer"))
-  (let* ((current-refs (org-entry-get nil citar-vulpea-refs-property))
+  (let* ((current-refs (citar-vulpea--get-ref-property))
          (current-keys (citar-vulpea--parse-refs current-refs)))
     (if (null current-keys)
         (user-error "No references in current note")
@@ -255,12 +273,11 @@ If only one reference remains, also removes the bibliography tag."
                               (completing-read "Remove reference: " current-keys nil t)))
              (remaining-keys (delete key-to-remove current-keys)))
         (if remaining-keys
-            (org-entry-put nil citar-vulpea-refs-property
-                           (mapconcat (lambda (k) (concat "@" k)) remaining-keys " "))
+            (citar-vulpea--set-ref-property
+             (mapconcat (lambda (k) (concat "@" k)) remaining-keys " "))
           ;; No refs left, remove property and tag
-          (org-entry-delete nil citar-vulpea-refs-property)
-          (let ((tags (org-get-tags nil t)))
-            (org-set-tags (delete citar-vulpea-keyword tags))))
+          (citar-vulpea--set-ref-property nil)
+          (vulpea-buffer-tags-remove (list citar-vulpea-keyword)))
         (message "Removed reference: %s" key-to-remove)))))
 
 ;;;###autoload
@@ -271,7 +288,7 @@ Otherwise, offer to add a reference."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Not in an org-mode buffer"))
-  (let* ((refs (org-entry-get nil citar-vulpea-refs-property))
+  (let* ((refs (citar-vulpea--get-ref-property))
          (keys (citar-vulpea--parse-refs refs)))
     (if keys
         (let ((key (if (= (length keys) 1)
