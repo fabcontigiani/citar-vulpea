@@ -99,6 +99,11 @@ When a string, notes are stored in that subdirectory."
 
 ;;; Internal functions
 
+(defun citar-vulpea--note-property (note property)
+  "Get value of PROPERTY from NOTE.
+Lookup PROPERTY in the properties alist of NOTE."
+  (cdr (assoc property (vulpea-note-properties note))))
+
 (defun citar-vulpea--parse-refs (refs-string)
   "Parse REFS-STRING into a list of citation keys.
 REFS-STRING contains @-prefixed keys separated by spaces."
@@ -115,7 +120,7 @@ REFS-STRING contains @-prefixed keys separated by spaces."
   "Get vulpea notes with refs property containing KEY."
   (vulpea-db-query
    (lambda (note)
-     (when-let ((refs (vulpea-note-property note citar-vulpea-refs-property)))
+     (when-let ((refs (citar-vulpea--note-property note citar-vulpea-refs-property)))
        (let ((keys (citar-vulpea--parse-refs refs)))
          (and keys
               (member key keys)
@@ -125,7 +130,7 @@ REFS-STRING contains @-prefixed keys separated by spaces."
   "Get all vulpea notes tagged with `citar-vulpea-keyword'."
   (vulpea-db-query
    (lambda (note)
-     (and (vulpea-note-property note citar-vulpea-refs-property)
+     (and (citar-vulpea--note-property note citar-vulpea-refs-property)
           (seq-contains-p (vulpea-note-tags note) citar-vulpea-keyword)))))
 
 (defun citar-vulpea--get-notes (&optional keys)
@@ -134,7 +139,7 @@ If KEYS is nil, return all notes with bibliography references."
   (let ((notes-table (make-hash-table :test 'equal))
         (all-notes (citar-vulpea--get-all-bib-notes)))
     (dolist (note all-notes)
-      (when-let* ((refs (vulpea-note-property note citar-vulpea-refs-property))
+      (when-let* ((refs (citar-vulpea--note-property note citar-vulpea-refs-property))
                   (note-keys (citar-vulpea--parse-refs refs)))
         (dolist (key note-keys)
           (when (or (null keys) (member key keys))
