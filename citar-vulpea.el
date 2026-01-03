@@ -114,12 +114,13 @@ Ensures we look at the correct entry (heading or file-level)."
 
 (defun citar-vulpea--set-ref-property (value)
   "Set the reference property for the note at point to VALUE.
-Ensures we update the correct entry (heading or file-level)."
+Ensures we update the correct entry (heading or file-level) and
+prefer property drawers over keywords."
   (save-excursion
     (org-back-to-heading-or-point-min t)
     (if (and value (> (length value) 0))
-        (org-entry-put nil citar-vulpea-refs-property value)
-      (org-entry-delete nil citar-vulpea-refs-property))))
+        (org-set-property citar-vulpea-refs-property value)
+      (org-delete-property citar-vulpea-refs-property))))
 
 (defun citar-vulpea--parse-refs (refs-string)
   "Parse REFS-STRING into a list of citation keys.
@@ -183,7 +184,7 @@ Each candidate is formatted for citar's completion interface."
        (dolist (note notes)
          (push (concat (propertize (vulpea-note-id note) 'invisible t)
                        " "
-                       (propertize (vulpea-note-title note) 'face 'citar))
+                       (vulpea-note-title note))
                (gethash key candidates))))
      notes-table)
     candidates))
