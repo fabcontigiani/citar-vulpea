@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2026 Fabrizio Contigiani
 
-;; Author: Fabrizio Contigiani
-;; Maintainer: Fabrizio Contigiani
+;; Author: Fabrizio Contigiani <fabcontigiani@gmail.com>
+;; Maintainer: Fabrizio Contigiani <fabcontigiani@gmail.com>
 ;; Homepage: https://github.com/fabcontigiani/citar-vulpea
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "27.2") (citar "1.4") (vulpea "2.0"))
@@ -53,7 +53,7 @@
 (defgroup citar-vulpea ()
   "Creating and accessing bibliography files with Citar and Vulpea."
   :group 'citar
-  :link '(url-link :tag "Homepage" "https://github.com/fabcontigiani/citar-vulpea/"))
+  :link '(url-link :tag "GitHub" "https://github.com/fabcontigiani/citar-vulpea/"))
 
 (defcustom citar-vulpea-keyword "bib"
   "Vulpea tag (filetag) to indicate bibliographical notes.
