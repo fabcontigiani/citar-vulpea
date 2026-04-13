@@ -46,7 +46,7 @@ Enable the integration:
 | `citar-vulpea-add-reference` | Add a citation reference to current note |
 | `citar-vulpea-remove-reference` | Remove a citation reference from current note |
 | `citar-vulpea-find-citation` | Find notes citing a reference |
-| `citar-vulpea-dwim` | Smart action based on context |
+| `citar-vulpea-dwim` | Open a citation from the current note, or add one if none exists |
 
 ### Creating Notes
 
@@ -57,6 +57,16 @@ With `citar-vulpea-mode` enabled, use `M-x citar-open-notes` or citar's regular 
 - `bib` filetag (configurable via `citar-vulpea-keyword`)
 
 The refs property is the link between a note and one or more citekeys. The package reads that property when searching for notes by citation key.
+
+### DWIM Command
+
+`citar-vulpea-dwim` looks at the current Org note and does the most useful thing:
+
+- if the note already has citation refs, it opens one of them in `citar`
+- if the note has multiple refs, it lets you choose which one to open
+- if the note has no refs, it offers to add one
+
+It only works in `org-mode`.
 
 ## Customization
 
