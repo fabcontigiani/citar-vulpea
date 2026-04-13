@@ -74,6 +74,11 @@ The refs property is the link between a note and one or more citekeys. The packa
 (setq citar-vulpea-notes-directory "references")
 ```
 
+## Related
+
+- [citar-org-roam](https://github.com/emacs-citar/citar-org-roam) — Similar integration for [org-roam](https://github.com/org-roam/org-roam)
+- [citar-denote](https://github.com/pprevos/citar-denote) — Similar integration for [Denote](https://github.com/protesilaos/denote)
+
 ## License
 
 GPL-3.0-or-later
