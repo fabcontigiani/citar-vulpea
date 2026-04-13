@@ -63,8 +63,9 @@ This minimizes the search space for connecting notes to a bibliography."
 
 (defcustom citar-vulpea-refs-property "ROAM_REFS"
   "Property name used to store citation keys in notes.
-The property value should contain cite keys prefixed with @, e.g., @smith2020.
-Multiple keys can be separated by spaces."
+`ROAM_REFS' is the default for compatibility with org-roam-style notes,
+but the package only requires that the property contain cite keys prefixed
+with @, e.g., @smith2020. Multiple keys can be separated by spaces."
   :group 'citar-vulpea
   :type 'string)
 
@@ -302,7 +303,7 @@ Otherwise, offer to add a reference."
 ;;; Minor mode
 
 (defvar citar-vulpea--orig-source nil
-  "Original citar-notes-source before enabling citar-vulpea-mode.")
+  "Original `citar-notes-source` before enabling `citar-vulpea-mode'.")
 
 (defun citar-vulpea--setup ()
   "Setup citar-vulpea integration."

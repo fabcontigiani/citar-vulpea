@@ -11,16 +11,21 @@ Emacs package integrating [citar](https://github.com/emacs-citar/citar) bibliogr
 
 ## Installation
 
-### Dependencies
+### Requirements
 
 - Emacs 27.2+
 - [citar](https://github.com/emacs-citar/citar) 1.4+
 - [vulpea](https://github.com/d12frosted/vulpea) 2.0+
 
+### Install from source
+
+Clone this repository somewhere on your `load-path`, or use `package-vc-install` if you are on Emacs 29+.
+
 ### Configuration
 
 ```elisp
 (use-package citar-vulpea
+  :load-path "/path/to/citar-vulpea"
   :after (citar vulpea)
   :config
   (citar-vulpea-mode 1))
@@ -48,8 +53,10 @@ Enable the integration:
 With `citar-vulpea-mode` enabled, use `M-x citar-open-notes` or citar's regular interface. When selecting a bibliography entry without an existing note, a new vulpea note will be created with:
 
 - Title derived from the entry (configurable via `citar-vulpea-note-title-template`)
-- `ROAM_REFS` property containing the citation key
+- A refs property containing the citation key so the note can be found again later (default: `ROAM_REFS` for org-roam compatibility; configurable via `citar-vulpea-refs-property`)
 - `bib` filetag (configurable via `citar-vulpea-keyword`)
+
+The refs property is the link between a note and one or more citekeys. The package reads that property when searching for notes by citation key.
 
 ## Customization
 
@@ -57,7 +64,7 @@ With `citar-vulpea-mode` enabled, use `M-x citar-open-notes` or citar's regular 
 ;; Tag for bibliographic notes (default: "bib")
 (setq citar-vulpea-keyword "bib")
 
-;; Property for storing citation keys (default: "ROAM_REFS")
+;; Property for storing citation keys (default: "ROAM_REFS" for org-roam compatibility)
 (setq citar-vulpea-refs-property "ROAM_REFS")
 
 ;; Note title template (default: "${author}, ${title}")
