@@ -4,10 +4,10 @@ Emacs package integrating [citar](https://github.com/emacs-citar/citar) bibliogr
 
 ## Features
 
-- Create bibliography notes using vulpea's powerful note system
-- Query notes by citation key using vulpea's SQLite database
+- Create bibliography notes from selected citations using Vulpea's note system
+- Find notes associated with a citation key
 - Citar integration with note indicators and completion
-- Add/remove citation references to existing notes
+- Add or remove citation references in existing notes
 
 ## Installation
 
@@ -63,8 +63,8 @@ With `citar-vulpea-mode` enabled, use `M-x citar-open-notes` or citar's regular 
 ;; Note title template (default: "${author}, ${title}")
 (setq citar-vulpea-note-title-template "${author} (${date}) ${title}")
 
-;; Subdirectory for bib notes (default: nil)
-(setq citar-vulpea-subdir "references")
+;; Notes directory (default: nil; uses vulpea-default-notes-directory when unset)
+(setq citar-vulpea-notes-directory "references")
 ```
 
 ## License

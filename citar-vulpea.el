@@ -75,13 +75,13 @@ Supports citar template variables like ${author}, ${title}, ${date}."
   :group 'citar-vulpea
   :type 'string)
 
-(defcustom citar-vulpea-subdir nil
-  "Subdirectory for bibliographic notes.
+(defcustom citar-vulpea-notes-directory nil
+  "Directory for bibliographic notes.
 When nil, notes are stored in `vulpea-default-notes-directory'.
-When a string, notes are stored in that subdirectory."
+When a string, notes are stored in that directory."
   :group 'citar-vulpea
   :type '(choice (const :tag "Default directory" nil)
-                 (string :tag "Subdirectory")))
+                 (string :tag "Path")))
 
 ;;; Notes source configuration
 
@@ -199,8 +199,8 @@ Each candidate is formatted for citar's completion interface."
 ENTRY is the bibliography entry (unused, fetched from citar)."
   (let* ((title (or (citar-vulpea--format-note-title citekey)
                     (read-string "Title: ")))
-         (file-name-template (when citar-vulpea-subdir
-                               (concat citar-vulpea-subdir "/${slug}.org")))
+         (file-name-template (when citar-vulpea-notes-directory
+                               (concat citar-vulpea-notes-directory "/${slug}.org")))
          (note (vulpea-create
                 title
                 file-name-template
