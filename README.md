@@ -9,6 +9,11 @@ Emacs package integrating [citar](https://github.com/emacs-citar/citar) bibliogr
 - Citar integration with note indicators and completion
 - Add or remove citation references in existing notes
 
+### Screenshots
+
+<img width="1242" height="425" alt="msrdc_dk347g9y9O" src="https://github.com/user-attachments/assets/b55e778a-2b4c-4230-a8f8-398177beee28" />
+<img width="1242" height="453" alt="msrdc_h2pi26a9Dq" src="https://github.com/user-attachments/assets/7dfae854-3034-4574-8f8a-5a33029eef22" />
+
 ## Installation
 
 ### Requirements
