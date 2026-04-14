@@ -4,9 +4,10 @@
 
 ;; Author: Fabrizio Contigiani <fabcontigiani@gmail.com>
 ;; Maintainer: Fabrizio Contigiani <fabcontigiani@gmail.com>
-;; Homepage: https://github.com/fabcontigiani/citar-vulpea
+;; URL: https://github.com/fabcontigiani/citar-vulpea
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "27.2") (citar "1.4") (vulpea "2.0"))
+;; Keywords: bibliography, notes, vulpea
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -44,6 +45,7 @@
 (require 'citar)
 (require 'vulpea)
 (require 'org)
+(require 'seq)
 
 (eval-when-compile
   (require 'subr-x))
@@ -51,7 +53,7 @@
 ;;; Customization
 
 (defgroup citar-vulpea ()
-  "Creating and accessing bibliography files with Citar and Vulpea."
+  "Creating and accessing bibliography notes with Citar and Vulpea."
   :group 'citar
   :link '(url-link :tag "GitHub" "https://github.com/fabcontigiani/citar-vulpea/"))
 
@@ -61,11 +63,10 @@ This minimizes the search space for connecting notes to a bibliography."
   :group 'citar-vulpea
   :type 'string)
 
-(defcustom citar-vulpea-refs-property "ROAM_REFS"
+(defcustom citar-vulpea-references-property "REFERENCES"
   "Property name used to store citation keys in notes.
-`ROAM_REFS' is the default for compatibility with org-roam-style notes,
-but the package only requires that the property contain cite keys prefixed
-with @, e.g., @smith2020. Multiple keys can be separated by spaces."
+The property should contain cite keys prefixed with @, e.g., @smith2020.
+Multiple keys can be separated by spaces."
   :group 'citar-vulpea
   :type 'string)
 
@@ -91,12 +92,9 @@ When a string, notes are stored in that directory."
         :category 'vulpea-note
         :items #'citar-vulpea--get-candidates
         :hasitems #'citar-vulpea--has-notes
-        :open #'citar-vulpea-open-note
+        :open #'citar-vulpea--open-note
         :create #'citar-vulpea--create-note)
   "Citar notes source configuration for Vulpea.")
-
-(defvar citar-notes-source)
-(defvar citar-notes-sources)
 
 ;;; Internal functions
 
@@ -111,7 +109,7 @@ string and symbol keys, and case-insensitivity."
 Ensures we look at the correct entry (heading or file-level)."
   (save-excursion
     (org-back-to-heading-or-point-min t)
-    (org-entry-get nil citar-vulpea-refs-property)))
+    (org-entry-get nil citar-vulpea-references-property)))
 
 (defun citar-vulpea--set-ref-property (value)
   "Set the reference property for the note at point to VALUE.
@@ -119,9 +117,9 @@ Ensures we update the correct entry (heading or file-level) and
 prefer property drawers over keywords."
   (save-excursion
     (org-back-to-heading-or-point-min t)
-    (if (and value (> (length value) 0))
-        (org-set-property citar-vulpea-refs-property value)
-      (org-delete-property citar-vulpea-refs-property))))
+    (if (org-string-nw-p value)
+        (org-set-property citar-vulpea-references-property value)
+      (org-delete-property citar-vulpea-references-property))))
 
 (defun citar-vulpea--parse-refs (refs-string)
   "Parse REFS-STRING into a list of citation keys.
@@ -135,15 +133,6 @@ REFS-STRING contains @-prefixed keys separated by spaces."
           (push (match-string 1) keys)))
       (nreverse keys))))
 
-(defun citar-vulpea--get-notes-for-key (key)
-  "Get vulpea notes with refs property containing KEY."
-  (vulpea-db-query
-   (lambda (note)
-     (when-let ((refs (citar-vulpea--note-property note citar-vulpea-refs-property)))
-       (let ((keys (citar-vulpea--parse-refs refs)))
-         (and keys
-              (member key keys)
-              (seq-contains-p (vulpea-note-tags note) citar-vulpea-keyword)))))))
 
 (defun citar-vulpea--get-all-bib-notes ()
   "Get all vulpea notes tagged with `citar-vulpea-keyword'.
@@ -151,8 +140,8 @@ If `citar-vulpea-keyword' is nil or an empty string, return all
 notes with the reference property."
   (vulpea-db-query
    (lambda (note)
-     (and (citar-vulpea--note-property note citar-vulpea-refs-property)
-          (or (not (and citar-vulpea-keyword (> (length citar-vulpea-keyword) 0)))
+     (and (citar-vulpea--note-property note citar-vulpea-references-property)
+          (or (not (org-string-nw-p citar-vulpea-keyword))
               (seq-contains-p (vulpea-note-tags note) citar-vulpea-keyword))))))
 
 (defun citar-vulpea--get-notes (&optional keys)
@@ -161,7 +150,7 @@ If KEYS is nil, return all notes with bibliography references."
   (let ((notes-table (make-hash-table :test 'equal))
         (all-notes (citar-vulpea--get-all-bib-notes)))
     (dolist (note all-notes)
-      (when-let* ((refs (citar-vulpea--note-property note citar-vulpea-refs-property))
+      (when-let* ((refs (citar-vulpea--note-property note citar-vulpea-references-property))
                   (note-keys (citar-vulpea--parse-refs refs)))
         (dolist (key note-keys)
           (when (or (null keys) (member key keys))
@@ -206,38 +195,19 @@ ENTRY is the bibliography entry (unused, fetched from citar)."
                 title
                 file-name-template
                 :tags (list citar-vulpea-keyword)
-                :properties (list (cons citar-vulpea-refs-property
+                :properties (list (cons citar-vulpea-references-property
                                         (concat "@" citekey))))))
     (when note
       (vulpea-visit note))))
 
-;;; Interactive commands
-
-;;;###autoload
-(defun citar-vulpea-open-note (candidate)
+(defun citar-vulpea--open-note (candidate)
   "Open vulpea note from CANDIDATE string.
 CANDIDATE is a string with the note ID as an invisible prefix."
   (let ((id (car (split-string (substring-no-properties candidate)))))
     (when-let ((note (vulpea-db-get-by-id id)))
       (vulpea-visit note))))
 
-;;;###autoload
-(defun citar-vulpea-find-citation ()
-  "Find notes that cite a bibliographic reference.
-Prompts to select from bibliography entries that have citations in notes."
-  (interactive)
-  (let* ((notes-table (citar-vulpea--get-notes))
-         (keys-with-notes (hash-table-keys notes-table)))
-    (if (null keys-with-notes)
-        (user-error "No citations found in Vulpea notes")
-      (let* ((citekey (citar-select-ref
-                       :filter (lambda (key) (member key keys-with-notes))))
-             (notes (gethash citekey notes-table)))
-        (if (= (length notes) 1)
-            (vulpea-visit (car notes))
-          (let ((note (vulpea-select-from "Select note" notes
-                                          :require-match t)))
-            (vulpea-visit note)))))))
+;;; Interactive commands
 
 ;;;###autoload
 (defun citar-vulpea-add-reference ()
@@ -309,7 +279,9 @@ Otherwise, offer to add a reference."
   "Setup citar-vulpea integration."
   (setq citar-vulpea--orig-source citar-notes-source)
   (citar-register-notes-source 'citar-vulpea citar-vulpea-notes-config)
-  (setq citar-notes-source 'citar-vulpea))
+  (if (listp citar-notes-source)
+      (add-to-list 'citar-notes-source 'citar-vulpea)
+    (setq citar-notes-source 'citar-vulpea)))
 
 (defun citar-vulpea--teardown ()
   "Teardown citar-vulpea integration."
