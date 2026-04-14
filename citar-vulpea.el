@@ -5,7 +5,7 @@
 ;; Author: Fabrizio Contigiani <fabcontigiani@gmail.com>
 ;; Maintainer: Fabrizio Contigiani <fabcontigiani@gmail.com>
 ;; URL: https://github.com/fabcontigiani/citar-vulpea
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Package-Requires: ((emacs "27.2") (citar "1.4") (vulpea "2.0"))
 ;; Keywords: bibliography, notes, vulpea
 
