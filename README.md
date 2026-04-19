@@ -1,5 +1,7 @@
 # citar-vulpea
 
+[![MELPA](https://melpa.org/packages/citar-vulpea-badge.svg)](https://melpa.org/#/citar-vulpea)
+
 Emacs minor mode integrating [citar](https://github.com/emacs-citar/citar) bibliography management with [vulpea](https://github.com/d12frosted/vulpea) note database.
 
 ## Features
@@ -18,6 +20,10 @@ Emacs minor mode integrating [citar](https://github.com/emacs-citar/citar) bibli
 - [citar](https://github.com/emacs-citar/citar) 1.4+
 - [vulpea](https://github.com/d12frosted/vulpea) 2.0+
 
+### MELPA
+
+`citar-vulpea` is available on [MELPA](https://melpa.org/). You can install it using `M-x package-install RET citar-vulpea RET`.
+
 ### Manual Installation
 
 Clone this repository and add it to your `load-path`:
@@ -31,7 +37,7 @@ Clone this repository and add it to your `load-path`:
 
 ```elisp
 (use-package citar-vulpea
-  :load-path "/path/to/citar-vulpea"
+  :ensure t
   :after (citar vulpea)
   :custom
   ;; Tag used to identify bibliographic notes
